@@ -46,7 +46,7 @@ public class WalletController {
     }
 
     @PostMapping("top-up/{balance}/{id}")
-    public ResponseEntity<Wallet> topUpWallet(@PathVariable Double balance,@PathVariable Long id) {
+    public ResponseEntity<Wallet> topUpWallet(@PathVariable Double balance,@PathVariable Long id) throws Exception {
        return ResponseEntity.ok().body(walletService.addMoneyToWallet(id,balance).get());
     }
 

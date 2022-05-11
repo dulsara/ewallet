@@ -24,7 +24,7 @@ public class TransactionService {
         return transactionRepository.save(transaction);
     }
 
-    public  void saveTransaction (Double amount, Long walletId, Long referenceId, String transactionType, String transactionTransferType, String description) {
+    public  Transaction saveTransaction (Double amount, Long walletId, Long referenceId, String transactionType, String transactionTransferType, String description) {
         Transaction transaction = new Transaction();
         transaction.setTransactionDate(Instant.now());
         transaction.setReferenceId(referenceId);
@@ -33,6 +33,6 @@ public class TransactionService {
         transaction.setType(transactionType);
         transaction.setDescription(description);
         transaction.setAmount(amount);
-        save(transaction);
+        return save(transaction);
     }
 }

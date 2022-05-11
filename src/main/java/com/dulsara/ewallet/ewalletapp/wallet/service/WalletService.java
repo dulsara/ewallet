@@ -39,11 +39,6 @@ public class WalletService {
     }
 
 
-
-    public Optional<Wallet> findById (Wallet wallet) {
-        return walletRepository.findById(wallet.getId());
-    }
-
     public Optional<Wallet> walletToWalletTranFer (Long walletId, Long transferWalletId, Double transferAmount) throws Exception {
 
         Optional<Wallet> transferWalletOptional = walletRepository.findById(transferWalletId);
@@ -67,7 +62,7 @@ public class WalletService {
         }
     }
 
-    public Optional<Wallet> addMoneyToWallet (Long walletId, Double addedAmount)  {
+    public Optional<Wallet> addMoneyToWallet (Long walletId, Double addedAmount) throws ResourceNotFoundException {
 
         Optional<Wallet> walletOptional = walletRepository.findById(walletId);
 
@@ -79,7 +74,7 @@ public class WalletService {
             return walletOptional;
         }
 
-        return null;
+        throw new ResourceNotFoundException("Wallet not found for this id :: " + walletId );
     }
 
 
@@ -105,7 +100,7 @@ public class WalletService {
 
     }
 
-    private boolean checkValidBalanceAvailable (Double currentBalance, Double deductedBalance) {
+    public boolean checkValidBalanceAvailable (Double currentBalance, Double deductedBalance) {
         return  currentBalance - deductedBalance >= 0.00;
     }
 
