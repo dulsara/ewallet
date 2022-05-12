@@ -10,6 +10,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.Instant;
 import java.util.List;
 import java.util.Optional;
 
@@ -22,86 +23,83 @@ public class WalletService {
     private final TransactionService transactionService;
 
 
-    public Wallet save (Wallet wallet){
+    public Wallet save(Wallet wallet) {
         return walletRepository.save(wallet);
     }
 
-    public List<Wallet> findAll () {
+    public List<Wallet> findAll() {
         return walletRepository.findAll();
     }
 
-    public Optional<Wallet> findByWalletName (String name) {
+    public Optional<Wallet> findByWalletName(String name) {
         return walletRepository.findWalletByName(name);
     }
 
-    public Optional<Wallet> findByWalletId (Long id) {
+    public Optional<Wallet> findByWalletId(Long id) {
         return walletRepository.findById(id);
     }
 
 
-    public Optional<Wallet> walletToWalletTranFer (Long walletId, Long transferWalletId, Double transferAmount) throws Exception {
+    public Optional<Wallet> walletToWalletTranFer(Long walletId, Long transferWalletId, Double transferAmount) throws Exception {
 
         Optional<Wallet> transferWalletOptional = walletRepository.findById(transferWalletId);
         Optional<Wallet> walletOptional = walletRepository.findById(walletId);
 
-        if (transferWalletOptional.isPresent() && walletOptional.isPresent())
-        {
+        if (transferWalletOptional.isPresent() && walletOptional.isPresent()) {
             if (checkValidBalanceAvailable(walletOptional.get().getBalance(), transferAmount)) {
                 transferWalletOptional.get().setBalance(transferWalletOptional.get().getBalance() + transferAmount);
                 walletOptional.get().setBalance(walletOptional.get().getBalance() - transferAmount);
                 save(transferWalletOptional.get());
                 save(walletOptional.get());
-                transactionService.saveTransaction(transferAmount,walletId,transferWalletId, TransactionType.DEBIT.toString(), TransactionTransferType.W2W.toString(),"SUCCESS");
+                transactionService.saveTransaction(transferAmount, walletId, transferWalletId, TransactionType.DEBIT.toString(), TransactionTransferType.W2W.toString(), "SUCCESS", Instant.now());
                 return walletOptional;
-            }
-            else {
-                throw new Exception("Wallet : "+ walletOptional.get().getName()+ " has not enough money to transfer given amount : " + transferAmount);
+            } else {
+                throw new Exception("Wallet : " + walletOptional.get().getName() + " has not enough money to transfer given amount : " + transferAmount);
             }
         } else {
-            throw new ResourceNotFoundException("Wallet not found for these ids :: " +transferWalletId +" & " + walletId );
+            throw new ResourceNotFoundException("Wallet not found for these ids :: " + transferWalletId + " & " + walletId);
         }
     }
 
-    public Optional<Wallet> addMoneyToWallet (Long walletId, Double addedAmount) throws ResourceNotFoundException {
+    public Optional<Wallet> addMoneyToWallet(Long walletId, Double addedAmount) throws ResourceNotFoundException {
 
         Optional<Wallet> walletOptional = walletRepository.findById(walletId);
 
         if (walletOptional.isPresent()) {
-                walletOptional.get().setBalance(walletOptional.get().getBalance() + addedAmount);
-                save(walletOptional.get());
-                transactionService.saveTransaction(addedAmount,walletId,0L, TransactionType.CREDIT.toString(), TransactionTransferType.CASH.toString(),"SUCCESS");
+            walletOptional.get().setBalance(walletOptional.get().getBalance() + addedAmount);
+            save(walletOptional.get());
+            transactionService.saveTransaction(addedAmount, walletId, 0L, TransactionType.CREDIT.toString(), TransactionTransferType.CASH.toString(), "SUCCESS", Instant.now());
 
             return walletOptional;
         }
 
-        throw new ResourceNotFoundException("Wallet not found for this id :: " + walletId );
+        throw new ResourceNotFoundException("Wallet not found for this id :: " + walletId);
     }
 
 
-    public Optional<Wallet> removeMoneyFromWallet (Long walletId, Double removeAmount) throws Exception {
+    public Optional<Wallet> removeMoneyFromWallet(Long walletId, Double removeAmount) throws Exception {
 
         Optional<Wallet> walletOptional = walletRepository.findById(walletId);
 
         if (walletOptional.isPresent()) {
 
-            if (checkValidBalanceAvailable(walletOptional.get().getBalance(),removeAmount)) {
+            if (checkValidBalanceAvailable(walletOptional.get().getBalance(), removeAmount)) {
                 walletOptional.get().setBalance(walletOptional.get().getBalance() - removeAmount);
                 save(walletOptional.get());
-                transactionService.saveTransaction(removeAmount,walletId,-1L, TransactionType.DEBIT.toString(), TransactionTransferType.CASH.toString(),"SUCCESS");
+                transactionService.saveTransaction(removeAmount, walletId, -1L, TransactionType.DEBIT.toString(), TransactionTransferType.CASH.toString(), "SUCCESS", Instant.now());
                 return walletOptional;
-            }
-            else {
-                throw new Exception("Wallet : "+ walletOptional.get().getName()+ " has not enough money to withdraw given amount : " + removeAmount);
+            } else {
+                throw new Exception("Wallet : " + walletOptional.get().getName() + " has not enough money to withdraw given amount : " + removeAmount);
 
             }
         } else {
-            throw new ResourceNotFoundException("Wallet not found for this id :: " + walletId );
+            throw new ResourceNotFoundException("Wallet not found for this id :: " + walletId);
         }
 
     }
 
-    public boolean checkValidBalanceAvailable (Double currentBalance, Double deductedBalance) {
-        return  currentBalance - deductedBalance >= 0.00;
+    public boolean checkValidBalanceAvailable(Double currentBalance, Double deductedBalance) {
+        return currentBalance - deductedBalance >= 0.00;
     }
 
 }
